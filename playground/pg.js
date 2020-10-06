@@ -1,35 +1,35 @@
 const {createPool}=require('mysql')
 const express=require('express')
+const {sign}=require('jsonwebtoken')
 
+const {checkToken}=require('../auth/auth')
 var mysql=require('mysql')
 const app=express();
 require('dotenv').config();
 const bodyparser=require('body-parser');
 const { json } = require('body-parser');
 
-app.use(bodyparser.urlencoded({extended:false}))
+
 
 const {hashSync,genSaltSync,compareSync, compare}=require('bcrypt');
 
 var jsonParser=bodyparser.json()
 
-const {sign}=require('jsonwebtoken')
+app.use(bodyparser.urlencoded({extended:false}))
 
-const {checkToken}=require('../auth/auth')
-
-
+// creating connection
 var con=mysql.createConnection(
     {
-        host:"localhost",
-        user:"root",
-
-        password:"msdhoni07",
-        database:"pikinav"
+        host:`${process.env.DB_HOST}`,
+        user:`${process.env.DB_USER}`,
+        
+        password:`${process.env.DB_PASSWORD}`,
+        database:`${process.env.MYSQL_DB}`
     }
 )
 
 
-
+//database connection
 con.connect((err)=>{
     if(err)
     throw err
@@ -76,7 +76,7 @@ app.post('/getEmail',checkToken,jsonParser,(req,res)=>
 })
 
 
-
+//API for login
 app.post('/login',jsonParser,(req,res)=>{
     login(req,res); 
 })
@@ -125,7 +125,7 @@ login=(req,res)=>{
   
 }
 
-
+// function for inserting data
 pranavInsertion=(req,res)=>{
     con.connect((err)=>{
         if(err)
@@ -180,6 +180,7 @@ return res.status(500).json({
     })
 }
 
+//test API
 app.post("/my",jsonParser,(req,res)=>{
     
     con.connect((err)=>{
@@ -211,10 +212,10 @@ app.post('/no',jsonParser,(req,res)=>{
 })
 
 
-app.post('/imp')
 
-app.listen(3000,()=>{
-    console.log('server is up and running')
+
+app.listen(process.env.APP_PORT,()=>{
+    console.log('server is up and running'+process.env.APP_PORT)
 })
 
 
