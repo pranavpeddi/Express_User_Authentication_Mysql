@@ -1,7 +1,7 @@
 const {createPool}=require('mysql')
 const express=require('express')
 const {sign}=require('jsonwebtoken')
-
+const morgan=require('morgan')
 const {checkToken}=require('../auth/auth')
 var mysql=require('mysql')
 const app=express();
@@ -17,7 +17,10 @@ var jsonParser=bodyparser.json()
 
 app.use(bodyparser.urlencoded({extended:false}))
 
+app.use(morgan('combined'))
+
 // creating connection
+/*
 var con=mysql.createConnection(
     {
         host:`${process.env.DB_HOST}`,
@@ -28,6 +31,16 @@ var con=mysql.createConnection(
     }
 )
 
+*/
+
+var con=mysql.createConnection(
+    {
+        host:"localhost",
+        user:"root",
+        password:"msdhoni07",
+        database:"pikinav"
+    }
+)
 
 //database connection
 con.connect((err)=>{
@@ -77,9 +90,11 @@ app.post('/getEmail',checkToken,jsonParser,(req,res)=>
 
 
 //API for login
-app.post('/login',jsonParser,(req,res)=>{
+app.post('/login',  jsonParser,(req,res)=>{
     login(req,res); 
 })
+
+
 
 login=(req,res)=>{
   const body=req.body
@@ -100,7 +115,6 @@ login=(req,res)=>{
           else
           {
               console.log(results[0].password)
-
               const result=compareSync(body.password,results[0].password)
               if(result)
               {
@@ -152,11 +166,54 @@ pranavInsertion=(req,res)=>{
 })
 }
 
-//function to fetch for the mail provided
-getUserByUserEmailL=(req,res)=>{
-    con.connect((err)=>{
+
+changePassword=(req,res)=>{
+    
+
+    const body=req.body
+    console.log('cp is fired----->',body)
+    const salt=genSaltSync(10)
+    var hashpassword=hashSync(body.newpassword,salt);
+    
+    var sql=`update registration set password='${hashpassword}' where email='${req.body.email}'`;
+    var passwordQuery=`select password from registration where email='${body.email}'`
+    con.query(passwordQuery,(err,result)=>{
         if(err)
         throw err
+        if(result)
+        {
+    console.log(result)
+        }
+        const loginflag=compareSync(body.password,result[0].password)
+        
+        
+
+       if(loginflag)
+       {
+           con.query(sql,(err2,result2)=>{
+               if(err2)
+               throw err2
+               console.log(result2)
+               return res.status(200).json({
+                   message:'password has changed successfully, please login'
+               })
+           })
+       }
+       else
+       {
+           return res.status(500).json({
+               message:'please provide right credentials to change password'
+           })
+       }   
+    })
+    
+    
+
+}
+
+//function to fetch for the mail provided
+getUserByUserEmailL=(req,res)=>{
+               
         const body=req.body
         var sql=`select name,password from registration where email='${body.email}'`
         con.query(sql,(err,result)=>{
@@ -177,13 +234,36 @@ return res.status(500).json({
 })
             }
         })
-    })
+    
 }
 
+
+app.patch('/changePassword',jsonParser,(req,res)=>{
+    changePassword(req,res);
+})
+
+
 //test API
+
+/*
 app.post("/my",jsonParser,(req,res)=>{
     
     con.connect((err)=>{
+        Could not send request
+        Error: connect ECONNREFUSED 127.0.0.1:3000
+        View in Console
+        Learn more about troubleshooting API requests
+        0
+        Find and Replace
+        Console
+        All Logs
+        28 ERRORS
+        Clear
+        Build
+        Build
+        Browse
+        Bootcamp
+        
         if(err)
         throw err;
         console.log('connected');
@@ -200,6 +280,8 @@ app.post("/my",jsonParser,(req,res)=>{
     })
 })
 
+*/
+
 
 app.post('/no',jsonParser,(req,res)=>{
     console.log('i am fired')
@@ -214,8 +296,8 @@ app.post('/no',jsonParser,(req,res)=>{
 
 
 
-app.listen(process.env.APP_PORT,()=>{
-    console.log('server is up and running'+process.env.APP_PORT)
+app.listen(3000,()=>{
+    console.log('server is up and running')
 })
 
 
