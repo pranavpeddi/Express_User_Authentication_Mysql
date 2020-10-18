@@ -23,7 +23,7 @@ const {
 //retrieves users, if found.
 app.get("/getallUsers",checkToken,jsonParser,(req,res)=>{
     
-        var sql='select * from registration'
+        var sql='select * from users'
         sql_obj.query(sql,(err,result)=>{
             if(err)
             throw err;
@@ -49,8 +49,8 @@ app.get("/getallUsers",checkToken,jsonParser,(req,res)=>{
 })
 
 
-//End point for registration
-app.post('/registration',checkToken,jsonParser,(req,res)=>{
+//End point for users
+app.post('/registration',jsonParser,(req,res)=>{
     pranavInsertion(req,res);
 })
 
@@ -74,7 +74,7 @@ app.post('/createExpense',jsonParser,(req,res)=>{
 login=(req,res)=>{
   const body=req.body
  
-      var sql=`select password  from registration where email='${body.email}' `
+      var sql=`select password  from users where email='${body.email}' `
       sql_obj.query(sql,(err,results)=>{
           if(err)
           {
@@ -123,7 +123,7 @@ pranavInsertion=(req,res)=>{
         const body=req.body
         const salt=genSaltSync(10)
         var password=hashSync(body.password,salt);
-        var sql=`insert into registration(name,password,email) values('${req.body.name}','${password}','${req.body.email}')`;
+        var sql=`insert into users(name,password,email) values('${req.body.name}','${password}','${req.body.email}')`;
         con.query(sql,(err,result)=>{
             if(err)
             {
@@ -150,8 +150,8 @@ changePassword=(req,res)=>{
     const salt=genSaltSync(10)
     var hashpassword=hashSync(body.newpassword,salt);
     
-    var sql=`update registration set password='${hashpassword}' where email='${req.body.email}'`;
-    var passwordQuery=`select password from registration where email='${body.email}'`
+    var sql=`update users set password='${hashpassword}' where email='${req.body.email}'`;
+    var passwordQuery=`select password from users where email='${body.email}'`
   sql_obj.query(passwordQuery,(err,result)=>{
         if(err)
         throw err
@@ -190,7 +190,7 @@ changePassword=(req,res)=>{
 getUserByUserEmailL=(req,res)=>{
                
         const body=req.body
-        var sql=`select name,password from registration where email='${body.email}'`
+        var sql=`select name,password from users where email='${body.email}'`
         con.query(sql,(err,result)=>{
             if(err)
             throw err
