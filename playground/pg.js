@@ -7,52 +7,24 @@ var mysql=require('mysql')
 const app=express();
 require('dotenv').config();
 const bodyparser=require('body-parser');
-const { json } = require('body-parser');
-
-
-
+const { json } = require('body-parser')
+const dbconfig=require('../config/database')
+const sql_obj=require("./db")
 const {hashSync,genSaltSync,compareSync, compare}=require('bcrypt');
-
 var jsonParser=bodyparser.json()
-
 app.use(bodyparser.urlencoded({extended:false}))
-
 app.use(morgan('combined'))
+const {
+    first_create_expense,
+    existing_expense
+}=require('./business')
 
-// creating connection
-/*
-var con=mysql.createConnection(
-    {
-        host:`${process.env.DB_HOST}`,
-        user:`${process.env.DB_USER}`,
-        
-        password:`${process.env.DB_PASSWORD}`,
-        database:`${process.env.MYSQL_DB}`
-    }
-)
-
-*/
-
-var con=mysql.createConnection(
-    {
-        host:"localhost",
-        user:"root",
-        password:"msdhoni07",
-        database:"pikinav"
-    }
-)
-
-//database connection
-con.connect((err)=>{
-    if(err)
-    throw err
-})
 
 //retrieves users, if found.
 app.get("/getallUsers",checkToken,jsonParser,(req,res)=>{
     
         var sql='select * from registration'
-        con.query(sql,(err,result)=>{
+        sql_obj.query(sql,(err,result)=>{
             if(err)
             throw err;
             if(result)
@@ -88,19 +60,22 @@ app.post('/getEmail',checkToken,jsonParser,(req,res)=>
    getUserByUserEmailL(req,res);
 })
 
+app.post('/existingExpense',jsonParser,existing_expense)
 
 //API for login
 app.post('/login',  jsonParser,(req,res)=>{
     login(req,res); 
 })
 
-
+app.post('/createExpense',jsonParser,(req,res)=>{
+    first_create_expense(req,res)
+})
 
 login=(req,res)=>{
   const body=req.body
  
       var sql=`select password  from registration where email='${body.email}' `
-      con.query(sql,(err,results)=>{
+      sql_obj.query(sql,(err,results)=>{
           if(err)
           {
               throw err;
@@ -177,7 +152,7 @@ changePassword=(req,res)=>{
     
     var sql=`update registration set password='${hashpassword}' where email='${req.body.email}'`;
     var passwordQuery=`select password from registration where email='${body.email}'`
-    con.query(passwordQuery,(err,result)=>{
+  sql_obj.query(passwordQuery,(err,result)=>{
         if(err)
         throw err
         if(result)
@@ -190,7 +165,7 @@ changePassword=(req,res)=>{
 
        if(loginflag)
        {
-           con.query(sql,(err2,result2)=>{
+         sql_obj.query(sql,(err2,result2)=>{
                if(err2)
                throw err2
                console.log(result2)
@@ -243,44 +218,7 @@ app.patch('/changePassword',jsonParser,(req,res)=>{
 })
 
 
-//test API
 
-/*
-app.post("/my",jsonParser,(req,res)=>{
-    
-    con.connect((err)=>{
-        Could not send request
-        Error: connect ECONNREFUSED 127.0.0.1:3000
-        View in Console
-        Learn more about troubleshooting API requests
-        0
-        Find and Replace
-        Console
-        All Logs
-        28 ERRORS
-        Clear
-        Build
-        Build
-        Browse
-        Bootcamp
-        
-        if(err)
-        throw err;
-        console.log('connected');
-        var sql=`insert into last (name,password) values('${req.body.name}','${req.body.password}')`;
-        con.query(sql,(err,result)=>{
-            if(err)
-            {
-                throw err;
-            }
-            return res.status(200).json({
-                data:'success'
-            })
-        })
-    })
-})
-
-*/
 
 
 app.post('/no',jsonParser,(req,res)=>{
