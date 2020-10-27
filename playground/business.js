@@ -1,6 +1,9 @@
 const e = require('express')
 const { request, response } = require('express')
 const sql=require('./db')
+const jwt=require('jsonwebtoken')
+
+
 
 
 exports.first_create_expense=(req,res)=>{
@@ -11,11 +14,12 @@ exports.first_create_expense=(req,res)=>{
     const flag=''
     
     const date=new Date().toISOString().slice(0, 19).replace('T', ' ')
-    query1=`insert into expense(name,credit,debit,balance,expense_date)values( '${name}', '${credit} ', '${debit}' , '${balance}' ,'${date}')`
+    query1=`insert into expense(name,credit,debit,balance,expense_date,user_id)values( '${name}', '${credit} ', '${debit}' , '${balance}' ,'${date}','${req.session.user_id}')`
     
     if(credit==undefined)
     {
-        query2=`insert into expense(name,credit,debit,balance,expense_date)values( '${name}', '0', '${debit}' , '${balance}' ,'${date}')`
+       dBal=balance-debit
+        query2=`insert into expense(name,credit,debit,balance,expense_date,user_id)values( '${name}', '0', '${debit}' , '${dBal}' ,'${date}','${req.session.user_id}')`
     sql.query(query2,(err,result)=>{
         if(err)
         throw err
@@ -27,7 +31,9 @@ exports.first_create_expense=(req,res)=>{
 }
 else if(debit==undefined)
 {
-    query3=`insert into expense(name,credit,debit,balance,expense_date)values( '${name}', '${credit} ', '0' , '${balance}' ,'${date}')`
+    cBAL=balance+credit
+    query3=`insert into expense(name,credit,debit,balance,expense_date,user_id)values( '${name}', '${credit} ', '0' , '${cBAL}' ,'${date}','${req.session.user_id}')`
+    cBAL=balance+credit
     sql.query(query3,(err,result)=>{
         if(err)
         throw err
@@ -71,7 +77,7 @@ exports.existing_expense=(req,res)=>
     }
 
     const date=new Date().toISOString().slice(0, 19).replace('T', ' ')
-    const query=`select balance from expense where eid = (select max(eid) from expense)`
+    const query=`select balance from expense where eid = (select max(eid) from expense where user_id='${req.session.user_id}')`
     sql.query(query,(err,result)=>
     {
         if(err)
@@ -81,7 +87,7 @@ exports.existing_expense=(req,res)=>
         
         if(result)
         {
-            query2=`insert into expense(name,credit,debit,balance,expense_date)values( '${name}', '${credit} ', ${debit}, '${finalbalance}' ,'${date}')`
+            query2=`insert into expense(name,credit,debit,balance,expense_date,user_id)values( '${name}', '${credit} ', ${debit}, '${finalbalance}' ,'${date}','${req.session.user_id}')`
             sql.query(query2,(err2,result2)=>{
                 if(err2)
                 throw err2
@@ -93,3 +99,5 @@ exports.existing_expense=(req,res)=>
     })
 
 }
+
+

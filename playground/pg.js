@@ -8,6 +8,8 @@ const app=express();
 require('dotenv').config();
 const bodyparser=require('body-parser');
 const { json } = require('body-parser')
+
+var session=require('express-session')
 const dbconfig=require('../config/database')
 const sql_obj=require("./db")
 const {hashSync,genSaltSync,compareSync, compare}=require('bcrypt');
@@ -16,9 +18,19 @@ app.use(bodyparser.urlencoded({extended:false}))
 app.use(morgan('combined'))
 const {
     first_create_expense,
-    existing_expense
+    existing_expense,generateId
 }=require('./business')
+const con = require('./db')
 
+
+app.use(session({
+    secret:"secret",
+    resave: true, 
+  
+    // Forces a session that is "uninitialized" 
+    // to be saved to the store 
+    saveUninitialized: true
+}));
 
 //retrieves users, if found.
 app.get("/getallUsers",checkToken,jsonParser,(req,res)=>{
@@ -49,6 +61,8 @@ app.get("/getallUsers",checkToken,jsonParser,(req,res)=>{
 })
 
 
+
+
 //End point for users
 app.post('/registration',jsonParser,(req,res)=>{
     pranavInsertion(req,res);
@@ -67,14 +81,14 @@ app.post('/login',  jsonParser,(req,res)=>{
     login(req,res); 
 })
 
-app.post('/createExpense',jsonParser,(req,res)=>{
+app.post('/createExpense',jsonParser,checkToken,(req,res)=>{
     first_create_expense(req,res)
 })
 
 login=(req,res)=>{
   const body=req.body
  
-      var sql=`select password  from users where email='${body.email}' `
+      var sql=`select uid,password  from users where email='${body.email}' `
       sql_obj.query(sql,(err,results)=>{
           if(err)
           {
@@ -94,7 +108,10 @@ login=(req,res)=>{
               if(result)
               {
                   result.password=undefined;
+                  console.log(results[0].uid)
+                req.session.user_id=results[0].uid
                   const jsontoken=sign({result:results},"qwe12345",{expiresIn:"1h"});
+                  console.log(jsontoken)
                   return res.json({
                       success:1,
                       token:jsontoken
@@ -116,9 +133,7 @@ login=(req,res)=>{
 
 // function for inserting data
 pranavInsertion=(req,res)=>{
-    con.connect((err)=>{
-        if(err)
-        throw err;
+   
         console.log('connected')
         const body=req.body
         const salt=genSaltSync(10)
@@ -138,7 +153,7 @@ pranavInsertion=(req,res)=>{
 
 
     )
-})
+
 }
 
 
@@ -181,10 +196,9 @@ changePassword=(req,res)=>{
            })
        }   
     })
-    
-    
-
 }
+
+
 
 //function to fetch for the mail provided
 getUserByUserEmailL=(req,res)=>{
@@ -209,7 +223,6 @@ return res.status(500).json({
 })
             }
         })
-    
 }
 
 

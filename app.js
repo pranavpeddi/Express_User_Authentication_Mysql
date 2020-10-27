@@ -17,6 +17,8 @@ app.use("/natry",trycheye);
 
 
 
+
+
 app.listen(process.env.APP_PORT ,()=>{
     console.log("server up and running "+process.env.APP_PORT);
 })
