@@ -139,10 +139,12 @@ pranavInsertion=(req,res)=>{
         const salt=genSaltSync(10)
         var password=hashSync(body.password,salt);
         var sql=`insert into users(name,password,email) values('${req.body.name}','${password}','${req.body.email}')`;
+        
         con.query(sql,(err,result)=>{
             if(err)
             {
-                throw err;
+                throw err;  
+                
             }
             return res.status(200).json(
                 {
@@ -150,6 +152,7 @@ pranavInsertion=(req,res)=>{
                 } )
 
         }
+        
 
 
     )

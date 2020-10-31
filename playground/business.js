@@ -6,6 +6,8 @@ const jwt=require('jsonwebtoken')
 
 
 
+
+//for creating first expense
 exports.first_create_expense=(req,res)=>{
     const name=req.body.name
     const credit=req.body.credit
@@ -58,7 +60,7 @@ else
 }
 
 
-
+// for updating balance for the existing expense
 exports.existing_expense=(req,res)=>
 {
     const name=req.body.name
@@ -78,26 +80,50 @@ exports.existing_expense=(req,res)=>
 
     const date=new Date().toISOString().slice(0, 19).replace('T', ' ')
     const query=`select balance from expense where eid = (select max(eid) from expense where user_id='${req.session.user_id}')`
+  
     sql.query(query,(err,result)=>
     {
-        if(err)
-        throw err
+        try
+        {
+            
+            if(result)
+            {
         console.log(result[0].balance)
         finalbalance=result[0].balance+credit-debit
+            }
+        }
+        catch(err)
+        {
+         res.status(500).json({
+             message:"this may not be your first record of your expense"
+         })
+        }
         
         if(result)
         {
             query2=`insert into expense(name,credit,debit,balance,expense_date,user_id)values( '${name}', '${credit} ', ${debit}, '${finalbalance}' ,'${date}','${req.session.user_id}')`
             sql.query(query2,(err2,result2)=>{
-                if(err2)
-                throw err2
-                res.status(200).json({
-                    message:'done updating balance'
-                })
+                try
+                {
+                    if(result2)
+                    {
+                        res.status(200).json({
+                            message:'done updating balance'
+                        })
+                    }
+                }
+                catch(err2)
+                {
+                    res.status(500).json({
+                        message:"unable to update balance"
+                    })
+                }
+                
             })
         }
     })
+  }
+  
 
-}
 
 
