@@ -8,7 +8,6 @@ const app=express();
 require('dotenv').config();
 const bodyparser=require('body-parser');
 const { json } = require('body-parser')
-
 var session=require('express-session')
 const dbconfig=require('../config/database')
 const sql_obj=require("./db")
@@ -18,7 +17,8 @@ app.use(bodyparser.urlencoded({extended:false}))
 app.use(morgan('combined'))
 const {
     first_create_expense,
-    existing_expense,generateId
+    existing_expense,
+    getMyExpenses
 }=require('./business')
 const con = require('./db')
 
@@ -233,6 +233,10 @@ app.patch('/changePassword',jsonParser,(req,res)=>{
     changePassword(req,res);
 })
 
+app.get('/getExpenses',checkToken,jsonParser,getMyExpenses)
+
+
+
 
 
 
@@ -248,7 +252,17 @@ app.post('/no',jsonParser,(req,res)=>{
 })
 
 
-
+app.post("/logout",(req,res)=>{
+    req.session.destroy((err)=>{
+        if(err)
+        {
+            throw err
+        }
+        res.status(200).json({
+            message:'you logged out successfully, please log in again'
+        })
+    })
+})
 
 app.listen(3000,()=>{
     console.log('server is up and running')
